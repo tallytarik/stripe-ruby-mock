@@ -3,11 +3,13 @@ require 'spec_helper'
 shared_examples 'Plan API' do
 
   it "creates a stripe plan" do
+    product = Stripe::Product.create(:name => 'The Memory Product')
     plan = Stripe::Plan.create(
       :id => 'pid_1',
       :name => 'The Mock Plan',
       :amount => 9900,
       :currency => 'USD',
+      :product => product.id,
       :interval => 1,
       :metadata => {
         :description => "desc text",
@@ -31,10 +33,12 @@ shared_examples 'Plan API' do
 
 
   it "creates a stripe plan without specifying ID" do
+    product = Stripe::Product.create(:name => 'The Memory Product')
     plan = Stripe::Plan.create(
       :name => 'The Mock Plan',
       :amount => 9900,
       :currency => 'USD',
+      :product => product.id,
       :interval => 1,
     )
 
@@ -42,11 +46,13 @@ shared_examples 'Plan API' do
   end
 
   it "stores a created stripe plan in memory" do
+    product = Stripe::Product.create(:name => 'The Memory Product')
     plan = Stripe::Plan.create(
       :id => 'pid_2',
       :name => 'The Memory Plan',
       :amount => 1100,
       :currency => 'USD',
+      :product => product.id,
       :interval => 1
     )
     plan2 = Stripe::Plan.create(
@@ -54,6 +60,7 @@ shared_examples 'Plan API' do
       :name => 'The Bonk Plan',
       :amount => 7777,
       :currency => 'USD',
+      :product => product.id,
       :interval => 1
     )
     data = test_data_source(:plans)
@@ -129,16 +136,16 @@ shared_examples 'Plan API' do
     expect(all.count).to eq(100)
   end
 
-  it 'validates the amount' do
+  it 'validates product presence' do
     expect {
       Stripe::Plan.create(
         :id => 'pid_1',
         :name => 'The Mock Plan',
-        :amount => 99.99,
+        :product => nil,
         :currency => 'USD',
         :interval => 'month'
       )
-    }.to raise_error(Stripe::InvalidRequestError, "Invalid integer: 99.99")
+    }.to raise_error(Stripe::InvalidRequestError, "Missing required param: product.")
   end
 
   describe "Validation", :live => true do
@@ -157,7 +164,6 @@ shared_examples 'Plan API' do
         expect { subject }.to raise_error(Stripe::InvalidRequestError, message)
       end
 
-      it("requires a name") { @name = :name }
       it("requires an amount") { @name = :amount }
       it("requires a currency") { @name = :currency }
       it("requires an interval") { @name = :interval }

@@ -12,14 +12,16 @@ describe StripeMock::Instance do
   before { StripeMock.start }
   after { StripeMock.stop }
 
-  it "handles both string and symbol hash keys" do
-    string_params = stripe_helper.create_plan_params(
-      "id" => "str_abcde",
-      :name => "String Plan"
-    )
+  it "handles string hash keys" do
+    string_params = stripe_helper.create_plan_params("id" => "str_abcde")
     res, api_key = StripeMock.instance.mock_request('post', '/v1/plans', api_key: 'api_key', params: string_params)
     expect(res.data[:id]).to eq('str_abcde')
-    expect(res.data[:name]).to eq('String Plan')
+  end
+
+  it "handles symbol hash keys" do
+    string_params = stripe_helper.create_plan_params(:id => "str_abcde")
+    res, api_key = StripeMock.instance.mock_request('post', '/v1/plans', api_key: 'api_key', params: string_params)
+    expect(res.data[:id]).to eq('str_abcde')
   end
 
   it "exits gracefully on an unrecognized handler url" do
